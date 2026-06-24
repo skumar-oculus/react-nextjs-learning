@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 
 export default function UsersPage() {
-  const users = [
+  const [users, setUsers] = useState([
     { id: 1, name: "John Doe", email: "john@example.com" },
     { id: 2, name: "Jane Smith", email: "jane@example.com" },
     { id: 3, name: "Mike Johnson", email: "mike@example.com" },
@@ -16,11 +16,15 @@ export default function UsersPage() {
     { id: 10, name: "Olivia Thomas", email: "olivia@example.com" },
     { id: 11, name: "James White", email: "james@example.com" },
     { id: 12, name: "Sophia Martin", email: "sophia@example.com" },
-  ];
+  ]);
 
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
+
+  const [editingId, setEditingId] = useState(null);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
 
   const filteredUsers = useMemo(() => {
     return users.filter(
@@ -28,7 +32,7 @@ export default function UsersPage() {
         user.name.toLowerCase().includes(search.toLowerCase()) ||
         user.email.toLowerCase().includes(search.toLowerCase())
     );
-  }, [search]);
+  }, [users, search]);
 
   const totalPages = Math.ceil(
     filteredUsers.length / rowsPerPage
@@ -41,6 +45,34 @@ export default function UsersPage() {
     startIndex + rowsPerPage
   );
 
+  const handleEdit = (user) => {
+    setEditingId(user.id);
+    setName(user.name);
+    setEmail(user.email);
+  };
+
+  const handleUpdate = () => {
+    if (!name.trim() || !email.trim()) return;
+
+    setUsers(
+      users.map((user) =>
+        user.id === editingId
+          ? { ...user, name, email }
+          : user
+      )
+    );
+
+    setEditingId(null);
+    setName("");
+    setEmail("");
+  };
+
+  const handleDelete = (id) => {
+    if (window.confirm("Delete this user?")) {
+      setUsers(users.filter((user) => user.id !== id));
+    }
+  };
+
   const handleSearch = (e) => {
     setSearch(e.target.value);
     setCurrentPage(1);
@@ -48,48 +80,82 @@ export default function UsersPage() {
 
   return (
     <div className="max-w-6xl mx-auto p-6">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
-        <h1 className="text-2xl font-bold">
-          Users Management
-        </h1>
+      <h1 className="text-3xl font-bold mb-6">
+        Users Management
+      </h1>
 
-        <div className="flex gap-3">
+      {/* Edit Form */}
+      {editingId && (
+        <div className="flex flex-col md:flex-row gap-3 mb-6">
           <input
             type="text"
-            placeholder="Search by name or email..."
-            value={search}
-            onChange={handleSearch}
-            className="border rounded-lg px-4 py-2 w-72"
+            placeholder="Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="border rounded-lg px-4 py-2 flex-1"
           />
 
-          <select
-            value={rowsPerPage}
-            onChange={(e) => {
-              setRowsPerPage(Number(e.target.value));
-              setCurrentPage(1);
-            }}
-            className="border rounded-lg px-3 py-2"
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="border rounded-lg px-4 py-2 flex-1"
+          />
+
+          <button
+            onClick={handleUpdate}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg"
           >
-            <option value={5}>5 Rows</option>
-            <option value={10}>10 Rows</option>
-            <option value={15}>15 Rows</option>
-          </select>
+            Update
+          </button>
+
+          <button
+            onClick={() => {
+              setEditingId(null);
+              setName("");
+              setEmail("");
+            }}
+            className="bg-gray-500 text-white px-4 py-2 rounded-lg"
+          >
+            Cancel
+          </button>
         </div>
+      )}
+
+      {/* Search + Rows Per Page */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
+        <input
+          type="text"
+          placeholder="Search by name or email..."
+          value={search}
+          onChange={handleSearch}
+          className="border rounded-lg px-4 py-2 w-full md:w-80"
+        />
+
+        <select
+          value={rowsPerPage}
+          onChange={(e) => {
+            setRowsPerPage(Number(e.target.value));
+            setCurrentPage(1);
+          }}
+          className="border rounded-lg px-3 py-2"
+        >
+          <option value={5}>5 Rows</option>
+          <option value={10}>10 Rows</option>
+          <option value={15}>15 Rows</option>
+        </select>
       </div>
 
+      {/* Table */}
       <div className="overflow-hidden border rounded-lg">
         <table className="w-full">
           <thead>
             <tr className="bg-slate-100">
-              <th className="text-left p-3 border-b">
-                ID
-              </th>
-              <th className="text-left p-3 border-b">
-                Name
-              </th>
-              <th className="text-left p-3 border-b">
-                Email
-              </th>
+              <th className="text-left p-3 border-b">ID</th>
+              <th className="text-left p-3 border-b">Name</th>
+              <th className="text-left p-3 border-b">Email</th>
+              <th className="text-left p-3 border-b">Actions</th>
             </tr>
           </thead>
 
@@ -100,21 +166,35 @@ export default function UsersPage() {
                   key={user.id}
                   className="hover:bg-slate-50"
                 >
+                  <td className="p-3 border-b">{user.id}</td>
+                  <td className="p-3 border-b">{user.name}</td>
+                  <td className="p-3 border-b">{user.email}</td>
+
                   <td className="p-3 border-b">
-                    {user.id}
-                  </td>
-                  <td className="p-3 border-b">
-                    {user.name}
-                  </td>
-                  <td className="p-3 border-b">
-                    {user.email}
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleEdit(user)}
+                        className="bg-yellow-500 text-white px-3 py-1 rounded"
+                      >
+                        Edit
+                      </button>
+
+                      <button
+                        onClick={() =>
+                          handleDelete(user.id)
+                        }
+                        className="bg-red-500 text-white px-3 py-1 rounded"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
                 <td
-                  colSpan="3"
+                  colSpan="4"
                   className="text-center py-8"
                 >
                   No users found
@@ -125,6 +205,7 @@ export default function UsersPage() {
         </table>
       </div>
 
+      {/* Pagination */}
       <div className="flex justify-between items-center mt-5">
         <p className="text-sm text-gray-600">
           Showing {currentUsers.length} of{" "}
@@ -133,11 +214,11 @@ export default function UsersPage() {
 
         <div className="flex gap-2">
           <button
-            className="px-4 py-2 border rounded disabled:opacity-50"
             disabled={currentPage === 1}
             onClick={() =>
               setCurrentPage((prev) => prev - 1)
             }
+            className="px-4 py-2 border rounded disabled:opacity-50"
           >
             Previous
           </button>
@@ -162,7 +243,6 @@ export default function UsersPage() {
           )}
 
           <button
-            className="px-4 py-2 border rounded disabled:opacity-50"
             disabled={
               currentPage === totalPages ||
               totalPages === 0
@@ -170,6 +250,7 @@ export default function UsersPage() {
             onClick={() =>
               setCurrentPage((prev) => prev + 1)
             }
+            className="px-4 py-2 border rounded disabled:opacity-50"
           >
             Next
           </button>
