@@ -22,6 +22,11 @@ export default function UsersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
+  // Add User States
+  const [newName, setNewName] = useState("");
+  const [newEmail, setNewEmail] = useState("");
+
+  // Edit User States
   const [editingId, setEditingId] = useState(null);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -45,17 +50,49 @@ export default function UsersPage() {
     startIndex + rowsPerPage
   );
 
+  // Create User
+  const handleAddUser = () => {
+    if (!newName.trim() || !newEmail.trim()) return;
+
+    const emailExists = users.some(
+      (user) =>
+        user.email.toLowerCase() === newEmail.toLowerCase()
+    );
+
+    if (emailExists) {
+      alert("Email already exists
+      ");
+      return;
+    }
+
+    const newUser = {
+      id:
+        users.length > 0
+          ? Math.max(...users.map((u) => u.id)) + 1
+          : 1,
+      name: newName,
+      email: newEmail,
+    };
+
+    setUsers((prev) => [...prev, newUser]);
+
+    setNewName("");
+    setNewEmail("");
+  };
+
+  // Edit User
   const handleEdit = (user) => {
     setEditingId(user.id);
     setName(user.name);
     setEmail(user.email);
   };
 
+  // Update User
   const handleUpdate = () => {
     if (!name.trim() || !email.trim()) return;
 
-    setUsers(
-      users.map((user) =>
+    setUsers((prev) =>
+      prev.map((user) =>
         user.id === editingId
           ? { ...user, name, email }
           : user
@@ -67,12 +104,25 @@ export default function UsersPage() {
     setEmail("");
   };
 
+  // Delete User
   const handleDelete = (id) => {
-    if (window.confirm("Delete this user?")) {
-      setUsers(users.filter((user) => user.id !== id));
+    if (window.confirm("Delete user?")) {
+      setUsers((prev) =>
+        prev.filter((user) => user.id !== id)
+      );
+
+      const remainingUsers = users.length - 1;
+      const updatedPages = Math.ceil(
+        remainingUsers / rowsPerPage
+      );
+
+      if (currentPage > updatedPages) {
+        setCurrentPage(Math.max(updatedPages, 1));
+      }
     }
   };
 
+  // Search
   const handleSearch = (e) => {
     setSearch(e.target.value);
     setCurrentPage(1);
@@ -84,6 +134,42 @@ export default function UsersPage() {
         Users Management
       </h1>
 
+      {/* Add User */}
+      <div className="border rounded-lg p-4 mb-6">
+        <h2 className="text-xl font-semibold mb-3">
+          Add New User
+        </h2>
+
+        <div className="flex flex-col md:flex-row gap-3">
+          <input
+            type="text"
+            placeholder="Enter name"
+            value={newName}
+            onChange={(e) =>
+              setNewName(e.target.value)
+            }
+            className="border rounded-lg px-4 py-2 flex-1"
+          />
+
+          <input
+            type="email"
+            placeholder="Enter email"
+            value={newEmail}
+            onChange={(e) =>
+              setNewEmail(e.target.value)
+            }
+            className="border rounded-lg px-4 py-2 flex-1"
+          />
+
+          <button
+            onClick={handleAddUser}
+            className="bg-green-600 text-white px-4 py-2 rounded-lg"
+          >
+            Add User
+          </button>
+        </div>
+      </div>
+
       {/* Edit Form */}
       {editingId && (
         <div className="flex flex-col md:flex-row gap-3 mb-6">
@@ -91,7 +177,9 @@ export default function UsersPage() {
             type="text"
             placeholder="Name"
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(e) =>
+              setName(e.target.value)
+            }
             className="border rounded-lg px-4 py-2 flex-1"
           />
 
@@ -99,7 +187,9 @@ export default function UsersPage() {
             type="email"
             placeholder="Email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) =>
+              setEmail(e.target.value)
+            }
             className="border rounded-lg px-4 py-2 flex-1"
           />
 
@@ -123,7 +213,7 @@ export default function UsersPage() {
         </div>
       )}
 
-      {/* Search + Rows Per Page */}
+      {/* Search + Rows */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
         <input
           type="text"
@@ -155,7 +245,9 @@ export default function UsersPage() {
               <th className="text-left p-3 border-b">ID</th>
               <th className="text-left p-3 border-b">Name</th>
               <th className="text-left p-3 border-b">Email</th>
-              <th className="text-left p-3 border-b">Actions</th>
+              <th className="text-left p-3 border-b">
+                Actions
+              </th>
             </tr>
           </thead>
 
@@ -166,14 +258,22 @@ export default function UsersPage() {
                   key={user.id}
                   className="hover:bg-slate-50"
                 >
-                  <td className="p-3 border-b">{user.id}</td>
-                  <td className="p-3 border-b">{user.name}</td>
-                  <td className="p-3 border-b">{user.email}</td>
+                  <td className="p-3 border-b">
+                    {user.id}
+                  </td>
+                  <td className="p-3 border-b">
+                    {user.name}
+                  </td>
+                  <td className="p-3 border-b">
+                    {user.email}
+                  </td>
 
                   <td className="p-3 border-b">
                     <div className="flex gap-2">
                       <button
-                        onClick={() => handleEdit(user)}
+                        onClick={() =>
+                          handleEdit(user)
+                        }
                         className="bg-yellow-500 text-white px-3 py-1 rounded"
                       >
                         Edit
@@ -194,7 +294,7 @@ export default function UsersPage() {
             ) : (
               <tr>
                 <td
-                  colSpan="4"
+                  colSpan={4}
                   className="text-center py-8"
                 >
                   No users found
