@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 
 export default function UsersPage() {
   const [users, setUsers] = useState([
-    { id: 1, name: "John Doe", email: "john@example.com", phone: "9876543210", position: "Manager" },
+    { id: 1, name: "John Doe", email: "john@example.com", phone: "9876542170", position: "Manager" },
     { id: 2, name: "Jane Smith", email: "jane@example.com", phone: "9876543211", position: "Developer" },
     { id: 3, name: "Mike Johnson", email: "mike@example.com", phone: "9876543212", position: "Designer" },
     { id: 4, name: "Sarah Wilson", email: "sarah@example.com", phone: "9876543213", position: "HR" },
